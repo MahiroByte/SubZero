@@ -31,4 +31,6 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      # Dieser Befehl sucht alle .csproj Dateien, die auf 'Tests' enden und testet sie einzeln
+      run: |
+        find . -name "*Tests.csproj" -exec dotnet test {} --no-build --verbosity normal --configuration Release \;
