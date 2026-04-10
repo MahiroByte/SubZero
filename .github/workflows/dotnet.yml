@@ -7,35 +7,44 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # Erster Job: Kompilieren
+  # Stage 1: Kompilieren
   build:
+    name: 🏗️ Build Stage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-      - name: Install Workload
-        run: dotnet workload restore
-      - name: Build
-        run: dotnet build --configuration Release
-      
-      # Optional: Hier müsstest du die Artefakte (DLLs) "hochladen", 
-      # damit der Test-Job sie nutzen kann. 
-      # Einfacher für den Anfang: Im Test-Job nochmal kurz builden.
 
-  # Zweiter Job: Testen
-  test:
-    needs: build # Dieser Job wartet auf den 'build' Job
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Install Workload
+
+      - name: Install Workloads
         run: dotnet workload restore
-      - name: Run Tests
-        run: dotnet test **/*Tests.csproj --configuration Release
+
+      - name: Build Project
+        # Wir bauen hier alles im Release-Modus
+        run: dotnet build --configuration Release --no-restore
+
+  # Stage 2: Testen (Erscheint als eigene Box)
+  test:
+    name: 🧪 Test Stage
+    needs: build # Sorgt dafür, dass Test erst nach Build startet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Workloads
+        run: dotnet workload restore
+
+      - name: Run Unit Tests
+        # Wir umgehen das SLNX-Pfad-Problem, indem wir die Projekte einzeln ansteuern
+        run: |
+          dotnet test SubZero.Domain.Tests/SubZero.Domain.Tests.csproj --configuration Release
+          dotnet test SubZero.Application.Tests/SubZero.Application.Tests.csproj --configuration Release
+          dotnet test SubZero.Infrastructure.Tests/SubZero.Infrastructure.Tests.csproj --configuration Release
