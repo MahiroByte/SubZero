@@ -18,7 +18,11 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x # Hier deine Version eintragen (z.B. 8.0.x oder 9.0.x)
+        dotnet-version: 10.0.x # Da dein Log SDK 10.0.201 zeigt
+
+    - name: Install MAUI Workload
+      # Dieser Befehl liest dein Projekt/Solution und installiert fehlende Workloads (maui-android)
+      run: dotnet workload restore
 
     - name: Restore Dependencies
       run: dotnet restore
