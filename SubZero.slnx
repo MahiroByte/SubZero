@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Tests/">
+    <Project Path="SubZero.Application.Tests/SubZero.Application.Tests.csproj" />
+    <Project Path="SubZero.Domain.Tests/SubZero.Domain.Tests.csproj" />
+    <Project Path="SubZero.Infrastructure.Tests/SubZero.Infrastructure.Tests.csproj" />
+  </Folder>
+  <Project Path="SubZero.Application/SubZero.Application.csproj" />
+  <Project Path="SubZero.Domain/SubZero.Domain.csproj" />
+  <Project Path="SubZero.Infrastructure/SubZero.Infrastructure.csproj" />
+  <Project Path="SubZero.Presentation/SubZero.Presentation.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>
