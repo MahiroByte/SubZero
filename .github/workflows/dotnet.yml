@@ -7,30 +7,35 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # Erster Job: Kompilieren
   build:
-    # Wir nutzen Ubuntu, da es schnell und günstig ist (für MAUI bräuchtest du macos-latest)
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Install Workload
+        run: dotnet workload restore
+      - name: Build
+        run: dotnet build --configuration Release
+      
+      # Optional: Hier müsstest du die Artefakte (DLLs) "hochladen", 
+      # damit der Test-Job sie nutzen kann. 
+      # Einfacher für den Anfang: Im Test-Job nochmal kurz builden.
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 10.0.x # Da dein Log SDK 10.0.201 zeigt
-
-    - name: Install MAUI Workload
-      # Dieser Befehl liest dein Projekt/Solution und installiert fehlende Workloads (maui-android)
-      run: dotnet workload restore
-
-    - name: Restore Dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-
-    - name: Test
-      # Dieser Befehl sucht alle .csproj Dateien, die auf 'Tests' enden und testet sie einzeln
-      run: |
-        find . -name "*Tests.csproj" -exec dotnet test {} --no-build --verbosity normal --configuration Release \;
+  # Zweiter Job: Testen
+  test:
+    needs: build # Dieser Job wartet auf den 'build' Job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Install Workload
+        run: dotnet workload restore
+      - name: Run Tests
+        run: dotnet test **/*Tests.csproj --configuration Release
