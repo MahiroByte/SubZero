@@ -55,3 +55,30 @@ jobs:
           dotnet test SubZero.Domain.Tests/SubZero.Domain.Tests.csproj --configuration Release
           dotnet test SubZero.Application.Tests/SubZero.Application.Tests.csproj --configuration Release
           dotnet test SubZero.Infrastructure.Tests/SubZero.Infrastructure.Tests.csproj --configuration Release
+
+# Stage 3: Android APK erstellen
+  release:
+    name: 📱 Android Build Stage
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Workloads
+        run: dotnet workload restore
+
+      - name: Publish Android APK
+        # Dieser Befehl erzeugt die eigentliche APK-Datei
+        run: dotnet publish SubZero.Presentation/SubZero.Presentation.csproj -f net10.0-android -c Release
+
+      - name: Upload APK Artifact
+        # Damit die Datei nicht gelöscht wird, laden wir sie bei GitHub hoch
+        uses: actions/upload-artifact@v4
+        with:
+          name: subzero-android-apk
+          path: SubZero.Presentation/bin/Release/net10.0-android/*-Signed.apk
