@@ -22,14 +22,16 @@ jobs:
       - name: Install Workloads
         run: dotnet workload restore
 
+      - name: Restore NuGet Packages
+        run: dotnet restore
+
       - name: Build Project
-        # Wir bauen hier alles im Release-Modus
         run: dotnet build --configuration Release --no-restore
 
-  # Stage 2: Testen (Erscheint als eigene Box)
+  # Stage 2: Testen
   test:
     name: 🧪 Test Stage
-    needs: build # Sorgt dafür, dass Test erst nach Build startet
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,8 +44,13 @@ jobs:
       - name: Install Workloads
         run: dotnet workload restore
 
+      - name: Restore NuGet Packages
+        # Das hier hat im zweiten Job gefehlt!
+        run: dotnet restore
+
       - name: Run Unit Tests
-        # Wir umgehen das SLNX-Pfad-Problem, indem wir die Projekte einzeln ansteuern
+        # Wir entfernen --no-build, damit er die Tests im Notfall selbst baut, 
+        # falls die DLLs nicht gefunden werden.
         run: |
           dotnet test SubZero.Domain.Tests/SubZero.Domain.Tests.csproj --configuration Release
           dotnet test SubZero.Application.Tests/SubZero.Application.Tests.csproj --configuration Release
