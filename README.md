@@ -1,0 +1,2 @@
+# SubZero
+A subscription manager
