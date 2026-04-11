@@ -56,9 +56,8 @@ jobs:
           dotnet test SubZero.Application.Tests/SubZero.Application.Tests.csproj --configuration Release
           dotnet test SubZero.Infrastructure.Tests/SubZero.Infrastructure.Tests.csproj --configuration Release
 
-# Stage 3: Android APK erstellen
   release:
-    name: 📱 Android Build Stage
+    name: 📱 Android Build & Sign
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -72,13 +71,23 @@ jobs:
       - name: Install Workloads
         run: dotnet workload restore
 
-      - name: Publish Android APK
-        # Dieser Befehl erzeugt die eigentliche APK-Datei
-        run: dotnet publish SubZero.Presentation/SubZero.Presentation.csproj -f net10.0-android -c Release
+      # Den Keystore aus dem Secret wieder in eine Datei umwandeln
+      - name: Decode Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > subzero.keystore
 
-      - name: Upload APK Artifact
-        # Damit die Datei nicht gelöscht wird, laden wir sie bei GitHub hoch
+      - name: Build & Publish APK
+        run: |
+          dotnet publish SubZero.Presentation/SubZero.Presentation.csproj \
+          -f net10.0-android \
+          -c Release \
+          -p:AndroidKeyStore=true \
+          -p:AndroidSigningKeyStore=../subzero.keystore \
+          -p:AndroidSigningKeyAlias=${{ secrets.KEY_ALIAS }} \
+          -p:AndroidSigningKeyPass=${{ secrets.KEY_PASSWORD }} \
+          -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }}
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: subzero-android-apk
+          name: SubZero-Signed-APK
           path: SubZero.Presentation/bin/Release/net10.0-android/*-Signed.apk
